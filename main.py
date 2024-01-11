@@ -16,15 +16,7 @@ class CowsAndBulls:
         self.window.title('Быки и коровы')
         self.init_frame_and_buttons()
         self.init_menu()
-        self.init_bindings()
         self.make_full_screen()
-
-    def init_bindings(self):
-        w = self.window
-
-        w.bind('n', self.start_game)
-        w.bind('s', self.see_records)
-        w.bind('<Escape>', self.quitwin)
 
     def init_menu(self):
         menubar = Menu(self.window)
@@ -246,17 +238,20 @@ class CowsAndBulls:
             row=2, column=0)
 
     def quitwin(self):
-        self.window.destroy()
-        self.init_frame()
-        self.frame.grid()
-        self.frame.grid_propagate(1)
-        self.big = font.Font(family='helvetica', size=24)
-        r = self.frame
+        try:
+            self.window.destroy()
+            self.init_frame()
+            self.frame.grid()
+            self.frame.grid_propagate(1)
+            self.big = font.Font(family='helvetica', size=24)
+            r = self.frame
 
-        Label(r, text='Быки и коровы',
-              font=self.big).grid(row=0, column=0)
+            Label(r, text='Быки и коровы',
+                  font=self.big).grid(row=0, column=0)
 
-        self.window.after(8000, self.window.destroy)
+            self.window.after(8000, self.window.destroy)
+        except:
+            pass
 
 
 def main():
