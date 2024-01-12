@@ -11,6 +11,9 @@ SHOW_TOP_BAR = True
 
 
 class CowsAndBulls:
+    first_number = None
+    second_number = None
+
     def __init__(self):
         self.window = Tk()
         self.window.title('Быки и коровы')
@@ -160,44 +163,141 @@ class CowsAndBulls:
         Button(frame, text='Меню', command=self.init_frame_and_buttons).grid(
             row=0, column=3)
 
-    def get_input(self, player_title):
-        while True:
-            try:
-                player_window = Tk()
-                player_window.title(player_title)
+    def get_user_number(self, player_title, is_first):
+        try:
+            player_window = Tk()
+            player_window.title(player_title)
 
-                player_number = StringVar()
+            player_entry = Entry(
+                player_window,
+                show='*',
+                width=64
+            )
+            player_entry.pack(pady=10)
 
-                player_entry = Entry(
-                    player_window,
-                    show='*',
-                    textvariable=player_number,
-                    width=64
-                )
-                player_entry.pack(pady=10)
-
-                def save_number():
-                    nonlocal player_number
-                    number = player_entry.get()
-                    if number.isdigit() and len(number) == 4:
-                        player_number = int(number)
-                        player_window.destroy()
+            def save_number():
+                number = player_entry.get()
+                if number.isdigit() and len(number) == 4:
+                    if is_first:
+                        self.first_number = number
                     else:
-                        messagebox.showerror(
-                            'Ошибка', 'Число должно быть четырёхзначным и состоять из цифр')
+                        self.second_number = number
 
-                submit_button = Button(
-                    player_window, text="Загадать", command=save_number)
-                submit_button.pack()
+                    player_window.quit()
+                    player_window.destroy()
+                else:
+                    messagebox.showerror(
+                        'Ошибка', 'Число должно быть четырёхзначным и состоять из цифр')
+                    self.get_user_number(player_title, is_first)
 
-                player_window.mainloop()
-
-            except:
-                messagebox.showerror('Ошибка', 'Что-то пошло не так')
+            submit_button = Button(
+                player_window, text="Загадать", command=save_number)
+            submit_button.pack()
+            player_window.mainloop()
+        except:
+            messagebox.showerror('Ошибка', 'Что-то пошло не так')
 
     def start_two_players_game(self):
-        self.get_input("Первый игрок вводит четырёхзначное число")
-        self.get_input("Второй игрок вводит четырёхзначное число")
+        self.get_user_number(
+            "Первый игрок вводит четырёхзначное число", is_first=True)
+        self.get_user_number(
+            "Второй игрок вводит четырёхзначное число", is_first=False)
+
+        self.run_two_players_game()
+
+    def run_two_players_game(self):
+        self.is_first_player = True
+
+        first_number = self.first_number
+        second_number = self.second_number
+
+        self.init_frame()
+        self.frame.grid()
+        frame = self.frame
+
+        global counter
+        counter = 1
+
+        Label(frame, text='Игрок', width=15).grid(row=counter, column=1)
+        Label(frame, text='Число', width=15).grid(row=counter, column=2)
+        Label(frame, text='Быки', width=15).grid(row=counter, column=3)
+        Label(frame, text='Коровы', width=15).grid(row=counter, column=4)
+
+        counter += 1
+
+        user_input = StringVar()
+
+        def validate_first_player():
+            flag = True
+            guess = str(user_input.get())
+
+            if not (len(guess) == 4):
+                alert('Ошибка', 'Введите четырёхзначное число')
+                flag = False
+
+            else:
+                try:
+                    int(guess)
+                except:
+                    alert('Ошибка', 'Ввести можно только четырёхзначное число')
+                    flag = False
+
+            if flag:
+                done()
+
+        def done():
+            guess = str(user_input.get())
+            bulls = 0
+            cows = 0
+
+            number = second_number if self.is_first_player else first_number
+
+            bulls, cows = bulls_and_cows(guess, number)
+            player_label = 'Первый игрок' if self.is_first_player else 'Второй игрок'
+
+            if str(user_input.get()) == number:
+                self.over_game(player_label)
+
+            global counter
+
+            Label(frame, text=player_label).grid(
+                row=counter, column=1)
+            Label(frame, text=str(user_input.get())).grid(
+                row=counter, column=2)
+            Label(frame, text=str(bulls)).grid(row=counter, column=3)
+            Label(frame, text=str(cows)).grid(row=counter, column=4)
+
+            counter += 1
+
+            self.is_first_player = not self.is_first_player
+            user_input.set('')
+
+        def digits(number):
+            return [int(d) for d in str(number)]
+
+        def bulls_and_cows(guess, target):
+            guess, target = digits(guess), digits(target)
+            bulls = [d1 == d2 for d1, d2 in zip(guess, target)].count(True)
+            cows = 0
+
+            for digit in set(guess):
+
+                cows += min(guess.count(digit), target.count(digit))
+
+            return bulls, cows - bulls
+
+        entry = Entry(frame, textvariable=user_input, width=4)
+        entry.grid(row=0, column=0)
+        entry.focus()
+
+        self.window.bind('<Return>', validate_first_player)
+
+        Button(frame, text='Угадать', command=validate_first_player).grid(
+            row=0, column=1)
+        Button(frame, text='Завершить игру', command=self.ask_game_end).grid(
+            row=0, column=2)
+        Button(frame, text='Меню', command=self.init_frame_and_buttons).grid(
+            row=0, column=3)
 
     def ask_game_end(self):
         if messagebox.askyesno('Вы уверены?', 'Точно закончить игру?', icon='warning'):
@@ -207,8 +307,9 @@ class CowsAndBulls:
         else:
             return
 
-    def over_game(self):
-        alert('Игра завершена', 'Победил игрок')
+    def over_game(self, who):
+        alert('Игра завершена',
+              'Победил игрок' if not who else f'Победил {who}')
         self.write_records('u')
         self.init_frame_and_buttons()
 
