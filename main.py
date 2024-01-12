@@ -2,12 +2,12 @@ import time
 import random
 from tkinter import font
 from tkinter import *
-from tkinter import messagebox
+from tkinter import messagebox, Entry, Tk
 
 alert = messagebox.showinfo
 
 
-SHOW_TOPBAR = True
+SHOW_TOP_BAR = True
 
 
 class CowsAndBulls:
@@ -21,17 +21,19 @@ class CowsAndBulls:
     def init_menu(self):
         menubar = Menu(self.window)
 
-        filemenu = Menu(menubar, tearoff=0)
-        filemenu.add_command(label='Игрок с компьютером',
-                             command=self.start_game, accelerator='N')
-        filemenu.add_command(
-            label='Выйти', command=self.quitwin, accelerator='Escape')
-        helpmenu = Menu(menubar, tearoff=0)
-        helpmenu.add_command(label='Правила', command=self.show_help)
-        helpmenu.add_command(label='Об игре', command=self.show_credits)
+        file_menu = Menu(menubar, tearoff=0)
+        file_menu.add_command(label='Игрок с компьютером',
+                              command=self.start_ai_game)
+        file_menu.add_command(label='Два игрока',
+                              command=self.start_two_players_game)
+        file_menu.add_command(
+            label='Выйти', command=self.quitwin)
+        help_menu = Menu(menubar, tearoff=0)
+        help_menu.add_command(label='Правила', command=self.show_help)
+        help_menu.add_command(label='Об игре', command=self.show_credits)
 
-        menubar.add_cascade(label='Меню', menu=filemenu)
-        menubar.add_cascade(label='Помощь', menu=helpmenu)
+        menubar.add_cascade(label='Меню', menu=file_menu)
+        menubar.add_cascade(label='Помощь', menu=help_menu)
 
         self.window.config(menu=menubar)
 
@@ -39,7 +41,7 @@ class CowsAndBulls:
         root = self.window
 
         width, height = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.overrideredirect(not SHOW_TOPBAR)
+        root.overrideredirect(not SHOW_TOP_BAR)
         root.geometry("%dx%d+0+0" % (width, height))
 
     def init_frame(self):
@@ -57,7 +59,9 @@ class CowsAndBulls:
         self.big = font.Font(family='helvetica', size=24)
 
         listOfButtons.append(
-            Button(self.frame, text='Игра с компьютером', command=self.start_game))
+            Button(self.frame, text='Игрок с компьютером', command=self.start_ai_game))
+        listOfButtons.append(
+            Button(self.frame, text='Два игрока', command=self.start_two_players_game))
         listOfButtons.append(
             Button(self.frame, text='Рекорды', command=self.see_records))
         listOfButtons.append(
@@ -67,7 +71,7 @@ class CowsAndBulls:
             listOfButtons[button]['font'] = self.big
             listOfButtons[button].pack(side='top')
 
-    def start_game(self):
+    def start_ai_game(self):
         target = ''
         target += str(random.choice(range(1, 10, 1)))
 
@@ -78,11 +82,9 @@ class CowsAndBulls:
 
         self.init_frame()
         self.frame.grid()
-
         frame = self.frame
 
         global counter
-
         counter = 1
 
         Label(frame, text='Число', width=15).grid(row=counter, column=1)
@@ -91,11 +93,11 @@ class CowsAndBulls:
 
         counter += 1
 
-        a = StringVar()
+        user_input = StringVar()
 
         def validate():
             flag = True
-            guess = str(a.get())
+            guess = str(user_input.get())
 
             if not (len(guess) == 4):
                 alert('Ошибка', 'Введите четырёхзначное число')
@@ -112,24 +114,25 @@ class CowsAndBulls:
                 done()
 
         def done():
-            guess = str(a.get())
+            guess = str(user_input.get())
             bulls = 0
             cows = 0
 
             bulls, cows = bulls_and_cows(guess, target)
 
-            if str(a.get()) == str(target):
+            if str(user_input.get()) == str(target):
                 self.over_game()
 
             global counter
 
-            Label(frame, text=str(a.get())).grid(row=counter, column=1)
+            Label(frame, text=str(user_input.get())).grid(
+                row=counter, column=1)
             Label(frame, text=str(bulls)).grid(row=counter, column=2)
             Label(frame, text=str(cows)).grid(row=counter, column=3)
 
             counter += 1
 
-            a.set('')
+            user_input.set('')
 
         def digits(number):
             return [int(d) for d in str(number)]
@@ -145,10 +148,9 @@ class CowsAndBulls:
 
             return bulls, cows - bulls
 
-        d = Entry(frame, textvariable=a, width=4)
-
-        d.grid(row=0, column=0)
-        d.focus()
+        entry = Entry(frame, textvariable=user_input, width=4)
+        entry.grid(row=0, column=0)
+        entry.focus()
 
         self.window.bind('<Return>', validate)
 
@@ -158,63 +160,99 @@ class CowsAndBulls:
         Button(frame, text='Меню', command=self.init_frame_and_buttons).grid(
             row=0, column=3)
 
+    def get_input(self, player_title):
+        while True:
+            try:
+                player_window = Tk()
+                player_window.title(player_title)
+
+                player_number = StringVar()
+
+                player_entry = Entry(
+                    player_window,
+                    show='*',
+                    textvariable=player_number,
+                    width=64
+                )
+                player_entry.pack(pady=10)
+
+                def save_number():
+                    nonlocal player_number
+                    number = player_entry.get()
+                    if number.isdigit() and len(number) == 4:
+                        player_number = int(number)
+                        player_window.destroy()
+                    else:
+                        messagebox.showerror(
+                            'Ошибка', 'Число должно быть четырёхзначным и состоять из цифр')
+
+                submit_button = Button(
+                    player_window, text="Загадать", command=save_number)
+                submit_button.pack()
+
+                player_window.mainloop()
+
+            except:
+                messagebox.showerror('Ошибка', 'Что-то пошло не так')
+
+    def start_two_players_game(self):
+        self.get_input("Первый игрок вводит четырёхзначное число")
+        self.get_input("Второй игрок вводит четырёхзначное число")
+
     def ask_game_end(self):
-
         if messagebox.askyesno('Вы уверены?', 'Точно закончить игру?', icon='warning'):
-
-            self.win('c')
+            self.write_records('c')
             self.init_frame_and_buttons()
 
         else:
-
             return
 
     def over_game(self):
         alert('Игра завершена', 'Победил игрок')
-        self.win('u')
+        self.write_records('u')
         self.init_frame_and_buttons()
 
-    def win(self, param):
+    def write_records(self, param):
         form = '%B %d, %Y, %H:%M:%S'
-        filin = open('records.txt', 'a')
-        filin.write(time.strftime(form) + '|')
+        records = open('records.txt', 'a')
+        records.write(time.strftime(form) + '|')
 
         if param == 'c':
-            filin.write('Компьютер')
+            records.write('Компьютер')
 
         if param == 'u':
-            filin.write('Игрок')
+            records.write('Игрок')
 
-        filin.write('\n')
-        filin.close()
+        records.write('\n')
+        records.close()
 
     def see_records(self):
-        a = open('records.txt', 'r')
-        a.seek(0)
-        b = Toplevel()
-        f = Frame(b)
-        f.grid()
+        records = open('records.txt', 'r')
+        records.seek(0)
+        toplevel = Toplevel()
+        frame = Frame(toplevel)
+        frame.grid()
 
-        Label(f, text="Дата", fg='red', bg='black',
+        Label(frame, text="Дата", fg='red', bg='black',
               width=25).grid(row=0, column=0)
-        Label(f, text="Победитель", fg='red', bg='black',
+        Label(frame, text="Победитель", fg='red', bg='black',
               width=25).grid(row=0, column=2)
 
         counter = 1
 
-        if len(a.readlines()) == 0:
+        if not len(records.readlines()):
             alert('Рекордов пока нет', 'Рекордов ещё не было')
             return
 
-        a.seek(0)
+        records.seek(0)
 
-        for i in a:
-            date, winner = i.split('|')
-            Label(f, text=date).grid(row=counter, column=0)
-            Label(f, text=winner).grid(row=counter, column=2)
+        for record in records:
+            date, winner = record.split('|')
+            Label(frame, text=date).grid(row=counter, column=0)
+            Label(frame, text=winner).grid(row=counter, column=2)
             counter += 1
 
-        Button(f, command=b.destroy, text="Выйти").grid(
+        Button(frame, command=toplevel.destroy, text="Выйти").grid(
             row=counter+1, column=1)
 
     def show_help(self):
@@ -244,9 +282,9 @@ class CowsAndBulls:
             self.frame.grid()
             self.frame.grid_propagate(1)
             self.big = font.Font(family='helvetica', size=24)
-            r = self.frame
+            frame = self.frame
 
-            Label(r, text='Быки и коровы',
+            Label(frame, text='Быки и коровы',
                   font=self.big).grid(row=0, column=0)
 
             self.window.after(8000, self.window.destroy)
