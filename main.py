@@ -227,7 +227,7 @@ class CowsAndBulls:
 
         user_input = StringVar()
 
-        def validate_first_player():
+        def validate():
             flag = True
             guess = str(user_input.get())
 
@@ -281,7 +281,6 @@ class CowsAndBulls:
             cows = 0
 
             for digit in set(guess):
-
                 cows += min(guess.count(digit), target.count(digit))
 
             return bulls, cows - bulls
@@ -290,9 +289,9 @@ class CowsAndBulls:
         entry.grid(row=0, column=0)
         entry.focus()
 
-        self.window.bind('<Return>', validate_first_player)
+        self.window.bind('<Return>', validate)
 
-        Button(frame, text='Угадать', command=validate_first_player).grid(
+        Button(frame, text='Угадать', command=validate).grid(
             row=0, column=1)
         Button(frame, text='Завершить игру', command=self.ask_game_end).grid(
             row=0, column=2)
@@ -301,7 +300,7 @@ class CowsAndBulls:
 
     def ask_game_end(self):
         if messagebox.askyesno('Вы уверены?', 'Точно закончить игру?', icon='warning'):
-            self.write_records('c')
+            self.write_records('second' if self.is_first_player else 'first')
             self.init_frame_and_buttons()
 
         else:
@@ -310,7 +309,7 @@ class CowsAndBulls:
     def over_game(self, who):
         alert('Игра завершена',
               'Победил игрок' if not who else f'Победил {who}')
-        self.write_records('u')
+        self.write_records('first' if who == 'Первый игрок' else 'second')
         self.init_frame_and_buttons()
 
     def write_records(self, param):
@@ -323,6 +322,12 @@ class CowsAndBulls:
 
         if param == 'u':
             records.write('Игрок')
+
+        if param == 'first':
+            records.write('Первый игрок')
+
+        if param == 'second':
+            records.write('Второй игрок')
 
         records.write('\n')
         records.close()
