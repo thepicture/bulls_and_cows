@@ -18,10 +18,14 @@ class CowsAndBulls:
 
     def __init__(self):
         self.window = Tk()
+        try:
+            self.window.iconphoto(False, PhotoImage(file='icon.png'))
+        except:
+            pass
         self.window.title('Быки и коровы')
         self.init_frame_and_buttons()
         self.init_menu()
-        self.make_full_screen()
+        self.window.eval('tk::PlaceWindow . center')
 
     def init_menu(self):
         menubar = Menu(self.window)
@@ -42,13 +46,6 @@ class CowsAndBulls:
 
         self.window.config(menu=menubar)
 
-    def make_full_screen(self):
-        root = self.window
-
-        width, height = root.winfo_screenwidth(), root.winfo_screenheight()
-        root.overrideredirect(not SHOW_TOP_BAR)
-        root.geometry("%dx%d+0+0" % (width, height))
-
     def init_frame(self):
         try:
             self.frame.destroy()
@@ -68,7 +65,7 @@ class CowsAndBulls:
         listOfButtons.append(
             Button(self.frame, text='Два игрока', command=self.start_two_players_game))
         listOfButtons.append(
-            Button(self.frame, text='Рекорды', command=self.see_records))
+            Button(self.frame, text='Рекорды', command=self.show_records))
         listOfButtons.append(
             Button(self.frame, text='Выйти', command=self.quitwin))
 
@@ -170,6 +167,7 @@ class CowsAndBulls:
     def get_user_number(self, player_title, is_first):
         try:
             player_window = Tk()
+            player_window.eval(f'tk::PlaceWindow . center')
             player_window.title(player_title)
 
             player_entry = Entry(
@@ -192,7 +190,6 @@ class CowsAndBulls:
                 else:
                     messagebox.showerror(
                         'Ошибка', 'Число должно быть четырёхзначным и состоять из цифр')
-                    self.get_user_number(player_title, is_first)
 
             submit_button = Button(
                 player_window, text="Загадать", command=save_number)
@@ -266,12 +263,15 @@ class CowsAndBulls:
 
             global counter
 
-            Label(frame, text=player_label).grid(
-                row=counter, column=1)
-            Label(frame, text=str(user_input.get())).grid(
-                row=counter, column=2)
-            Label(frame, text=str(bulls)).grid(row=counter, column=3)
-            Label(frame, text=str(cows)).grid(row=counter, column=4)
+            try:
+                Label(frame, text=player_label).grid(
+                    row=counter, column=1)
+                Label(frame, text=str(user_input.get())).grid(
+                    row=counter, column=2)
+                Label(frame, text=str(bulls)).grid(row=counter, column=3)
+                Label(frame, text=str(cows)).grid(row=counter, column=4)
+            except:
+                pass
 
             counter += 1
 
@@ -309,7 +309,8 @@ class CowsAndBulls:
             if self.is_one_player:
                 self.write_records('c')
             else:
-                self.write_records('second' if self.is_first_player else 'first')
+                self.write_records(
+                    'second' if self.is_first_player else 'first')
             self.init_frame_and_buttons()
 
         else:
@@ -344,11 +345,17 @@ class CowsAndBulls:
         records.write('\n')
         records.close()
 
-    def see_records(self):
-        records = open('records.txt', 'r')
+    def show_records(self):
+        try:
+            records = open('records.txt', 'r')
+        except:
+            alert('Рекордов пока нет', 'Рекордов ещё не было')
+            return
+
         records.seek(0)
         toplevel = Toplevel()
         frame = Frame(toplevel)
+        self.window.eval(f'tk::PlaceWindow {str(toplevel)} center')
         frame.grid()
 
         Label(frame, text="Дата", fg='red', bg='black',
@@ -385,6 +392,7 @@ class CowsAndBulls:
 
     def show_credits(self):
         toplevel = Toplevel()
+        self.window.eval(f'tk::PlaceWindow {toplevel} center')
 
         Label(toplevel, text='Быки и коровы',
               font=self.big).grid(row=0, column=0)
