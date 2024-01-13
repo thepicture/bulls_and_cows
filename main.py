@@ -11,8 +11,10 @@ SHOW_TOP_BAR = True
 
 
 class CowsAndBulls:
+    is_one_player = True
     first_number = None
     second_number = None
+    is_first_player = True
 
     def __init__(self):
         self.window = Tk()
@@ -75,6 +77,8 @@ class CowsAndBulls:
             listOfButtons[button].pack(side='top')
 
     def start_ai_game(self):
+        self.is_one_player = True
+
         target = ''
         target += str(random.choice(range(1, 10, 1)))
 
@@ -123,7 +127,7 @@ class CowsAndBulls:
 
             bulls, cows = bulls_and_cows(guess, target)
 
-            if str(user_input.get()) == str(target):
+            if user_input.get() == str(target):
                 self.over_game()
 
             global counter
@@ -198,6 +202,8 @@ class CowsAndBulls:
             messagebox.showerror('Ошибка', 'Что-то пошло не так')
 
     def start_two_players_game(self):
+        self.is_one_player = False
+
         self.get_user_number(
             "Первый игрок вводит четырёхзначное число", is_first=True)
         self.get_user_number(
@@ -300,19 +306,25 @@ class CowsAndBulls:
 
     def ask_game_end(self):
         if messagebox.askyesno('Вы уверены?', 'Точно закончить игру?', icon='warning'):
-            self.write_records('second' if self.is_first_player else 'first')
+            if self.is_one_player:
+                self.write_records('c')
+            else:
+                self.write_records('second' if self.is_first_player else 'first')
             self.init_frame_and_buttons()
 
         else:
             return
 
-    def over_game(self, who):
+    def over_game(self, who=None):
         alert('Игра завершена',
               'Победил игрок' if not who else f'Победил {who}')
-        self.write_records('first' if who == 'Первый игрок' else 'second')
+        if who:
+            self.write_records('first' if who == 'Первый игрок' else 'second')
+        else:
+            self.write_records('u')
         self.init_frame_and_buttons()
 
-    def write_records(self, param):
+    def write_records(self, param='u'):
         form = '%B %d, %Y, %H:%M:%S'
         records = open('records.txt', 'a')
         records.write(time.strftime(form) + '|')
