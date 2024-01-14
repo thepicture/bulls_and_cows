@@ -419,8 +419,6 @@ class CowsAndBulls:
 
             Label(frame, text='Быки и коровы',
                   font=self.big).grid(row=0, column=0)
-
-            self.window.after(8000, self.window.destroy)
         except:
             pass
 
