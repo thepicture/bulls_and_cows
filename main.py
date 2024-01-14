@@ -311,6 +311,7 @@ class CowsAndBulls:
             row=0, column=3)
 
     def ask_game_end(self):
+        self.window.tk.eval('::msgcat::mclocale ru')
         if messagebox.askyesno('Вы уверены?', 'Точно закончить игру?', icon='warning'):
             if self.is_one_player:
                 self.write_records('c')
