@@ -1,8 +1,14 @@
 import time
+import locale
 import random
 from tkinter import font
 from tkinter import *
 from tkinter import messagebox, Entry, Tk
+
+try:
+    locale.setlocale(locale.LC_TIME, "ru_RU.UTF-8")
+except:
+    pass
 
 alert = messagebox.showinfo
 
